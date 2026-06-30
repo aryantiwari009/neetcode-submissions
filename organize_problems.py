@@ -10,20 +10,17 @@ def fetch_neetcode_mapping():
     """Dynamically fetches the problem-to-category mapping from NeetCode's public data structure."""
     url = "https://raw.githubusercontent.com/neetcode-gh/neetcode.io/main/src/data/neetcode250.json"
     try:
-        with urllib.request.urlopen(url) as response:
+        req = urllib.request.Request(
+            url, 
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+        )
+        with urllib.request.urlopen(req) as response:
             data = json.loads(response.read().decode())
             
         mapping = {}
-        # Traverse the NeetCode 250 JSON structure
         for chapter in data:
             category_name = chapter.get("name", "").strip()
-            # Clean up category names to look nice as folders (e.g., "Arrays & Hashing")
-            if "Arrays" in category_name and "Hashing" in category_name:
-                # Standardize to what you prefer or leave separate based on sheet split
-                pass 
-                
             for problem in chapter.get("problems", []):
-                # The folder name matches the link identifier slug (e.g., 'is-anagram')
                 link = problem.get("link", "")
                 slug_match = re.search(r'problems/([^/]+)', link)
                 if slug_match:
@@ -67,6 +64,14 @@ def organize_folders():
     print("Fetching live NeetCode 250 data tracking mapping...")
     problem_map = fetch_neetcode_mapping()
 
+    # Protected operational category folders based on official NeetCode 250 naming conventions
+    protected_folders = [
+        "Arrays", "Hashing", "Two_Pointers", "Sliding_Window", "Stack", 
+        "Binary_Search", "Linked_List", "Trees", "Tries", "Heap", 
+        "Backtracking", "Graphs", "Advanced_Graphs", "Dynamic_Programming", 
+        "Greedy", "Intervals", "Math_&_Geometry", "Bit_Manipulation", "Uncategorized"
+    ]
+
     # Scan both the root directory and the Uncategorized folder
     directories_to_scan = [source_dir]
     uncategorized_dir = os.path.join(source_dir, "Uncategorized")
@@ -78,8 +83,8 @@ def organize_folders():
             item_path = os.path.join(scan_dir, item)
             
             if os.path.isdir(item_path):
-                # Keep target operational category folders safe
-                if item in ["Arrays", "Hashing", "Two_Pointers", "Sliding_Window", "Stack", "Binary_Search", "Linked_List", "Trees", "Tries", "Heap", "Backtracking", "Graphs", "Advanced_Graphs", "Dynamic_Programming", "Greedy", "Intervals", "Math_&_Geometry", "Bit_Manipulation", "String", "Uncategorized"]:
+                # Skip target structural directories
+                if item in protected_folders:
                     continue
                     
                 # 1. Match dynamically against the retrieved live NeetCode index map
