@@ -2,28 +2,21 @@ import os
 import re
 import shutil
 
-# Root directory of your repository
 REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
-# The specific folder where your extension currently pushes questions
-TARGET_SOURCE_DIR = os.path.join(REPO_ROOT, "Data Structures & Algorithms")
 
 def get_topic_from_readme(readme_path):
-    """
-    Parses the README.md file of a problem to find its topic/category tags.
-    """
     if not os.path.exists(readme_path):
         return None
-    
-    with open(readme_path, 'r', encoding='utf-8') as f:
-        content = f.read()
+    try:
+        with open(readme_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except Exception:
+        return None
         
-    # Pattern to match lines like "### Topics" or "Tags: Two Pointers"
     match = re.search(r'(?:Topic[s]?|Tag[s]?):\s*\*?([^\*\n]+)\*?', content, re.IGNORECASE)
     if match:
-        topic = match.group(1).split(',')[0].strip()
-        return topic
+        return match.group(1).split(',')[0].strip()
         
-    # Fallback: Scrape for standard NeetCode categories explicitly mentioned
     categories = [
         "Arrays & Hashing", "Two Pointers", "Sliding Window", "Stack", 
         "Binary Search", "Linked List", "Trees", "Tries", "Heap", 
@@ -33,49 +26,48 @@ def get_topic_from_readme(readme_path):
     for cat in categories:
         if re.search(rf'\b{cat}\b', content, re.IGNORECASE):
             return cat
-            
     return None
 
 def organize_folders():
-    if not os.path.exists(TARGET_SOURCE_DIR):
-        print(f"Directory not found: {TARGET_SOURCE_DIR}")
+    # Dynamically find the directory containing your problems
+    target_dir_name = "Data Structures & Algorithms"
+    source_dir = os.path.join(REPO_ROOT, target_dir_name)
+    
+    if not os.path.exists(source_dir):
+        # Fallback in case of encoding mismatches in the environment
+        for item in os.listdir(REPO_ROOT):
+            if "Data Structures" in item and os.path.isdir(os.path.join(REPO_ROOT, item)):
+                source_dir = os.path.join(REPO_ROOT, item)
+                break
+                
+    if not os.path.exists(source_dir):
+        print("Target directory not found.")
         return
 
-    # Scan everything inside 'Data Structures & Algorithms'
-    for item in os.listdir(TARGET_SOURCE_DIR):
-        item_path = os.path.join(TARGET_SOURCE_DIR, item)
+    for item in os.listdir(source_dir):
+        item_path = os.path.join(source_dir, item)
         
-        # We only want to process individual problem directories
         if os.path.isdir(item_path):
-            readme_path = os.path.join(item_path, "README.md")
-            
-            # Identify the topic
-            topic = get_topic_from_readme(readme_path)
-            if not topic:
-                topic = "Uncategorized"
-                
-            # Clean folder name (e.g., "Two Pointers" -> "Two_Pointers")
-            topic_folder_name = re.sub(r'[^\w\s\-&]', '', topic).strip().replace(' ', '_')
-            
-            # This creates the topic folder inside 'Data Structures & Algorithms'
-            # e.g., 'Data Structures & Algorithms/Arrays_&_Hashing/'
-            target_dir = os.path.join(TARGET_SOURCE_DIR, topic_folder_name)
-            
-            # Prevent moving a topic folder into itself
-            if item == topic_folder_name:
+            # Skip folders that are already clean topic folders
+            if item in ["Arrays_&_Hashing", "Two_Pointers", "Sliding_Window", "Stack", "Binary_Search", "Linked_List", "Trees", "Tries", "Heap", "Backtracking", "Graphs", "Advanced_Graphs", "Dynamic_Programming", "Greedy", "Intervals", "Math_&_Geometry", "Bit_Manipulation", "String", "Uncategorized"]:
                 continue
                 
-            os.makedirs(target_dir, exist_ok=True)
+            readme_path = os.path.join(item_path, "README.md")
+            topic = get_topic_from_readme(readme_path) or "Uncategorized"
             
-            dest_path = os.path.join(target_dir, item)
-            print(f"Moving {item} -> {topic_folder_name}/")
+            topic_folder_name = re.sub(r'[^\w\s\-&]', '', topic).strip().replace(' ', '_')
+            target_topic_dir = os.path.join(source_dir, topic_folder_name)
+            
+            os.makedirs(target_topic_dir, exist_ok=True)
+            dest_path = os.path.join(target_topic_dir, item)
             
             try:
                 if os.path.exists(dest_path):
-                    shutil.rmtree(dest_path) # Overwrite if it already exists
-                shutil.move(item_path, target_dir)
+                    shutil.rmtree(dest_path)
+                shutil.move(item_path, target_topic_dir)
+                print(f"Successfully moved {item} to {topic_folder_name}")
             except Exception as e:
-                print(f"Error moving {item}: {e}")
+                print(f"Failed to move {item}: {e}")
 
 if __name__ == "__main__":
     organize_folders()
