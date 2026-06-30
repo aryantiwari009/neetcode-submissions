@@ -5,7 +5,6 @@ on:
     branches:
       - main
 
-# Grant write permissions so the bot can commit and push changes back
 permissions:
   contents: write
 
@@ -24,7 +23,8 @@ jobs:
           python-version: '3.x'
 
       - name: Run Organization Script
-        run: python organize_problems.py
+        # Updated this line to point to where the script actually lives
+        run: python "Data Structures & Algorithms/Uncategorized/organize_problems.py"
 
       - name: Commit and Push Changes
         run: |
