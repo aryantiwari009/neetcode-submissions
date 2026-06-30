@@ -64,7 +64,7 @@ def organize_folders():
     print("Fetching live NeetCode 250 data tracking mapping...")
     problem_map = fetch_neetcode_mapping()
 
-    # Protected operational category folders based on official NeetCode 250 naming conventions
+    # Protected system operational folder names (normalized with underscores)
     protected_folders = [
         "Arrays", "Hashing", "Two_Pointers", "Sliding_Window", "Stack", 
         "Binary_Search", "Linked_List", "Trees", "Tries", "Heap", 
@@ -83,7 +83,7 @@ def organize_folders():
             item_path = os.path.join(scan_dir, item)
             
             if os.path.isdir(item_path):
-                # Skip target structural directories
+                # Standardize current item name format to check against protected paths
                 if item in protected_folders:
                     continue
                     
@@ -95,13 +95,14 @@ def organize_folders():
                     readme_path = os.path.join(item_path, "README.md")
                     topic = get_topic_from_readme(readme_path) or "Uncategorized"
                 
-                if scan_dir == uncategorized_dir and topic == "Uncategorized":
+                # Format target directory structure string (e.g. "Two Pointers" -> "Two_Pointers")
+                topic_folder_name = re.sub(r'[^\w\s\-&]', '', topic).strip().replace(' ', '_')
+                
+                # Stop if it's already properly matched inside its destination folder or Uncategorized
+                if item == topic_folder_name or (scan_dir == uncategorized_dir and topic_folder_name == "Uncategorized"):
                     continue
                 
-                # Sanitize the folder name to use underscores instead of spaces
-                topic_folder_name = re.sub(r'[^\w\s\-&]', '', topic).strip().replace(' ', '_')
                 target_topic_dir = os.path.join(source_dir, topic_folder_name)
-                
                 os.makedirs(target_topic_dir, exist_ok=True)
                 dest_path = os.path.join(target_topic_dir, item)
                 
