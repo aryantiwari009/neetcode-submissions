@@ -1,9 +1,11 @@
-name: Organize Submissions Topicwise
+name: Organize NeetCode Submissions
 
 on:
   push:
     branches:
       - main
+    paths:
+      - "Data Structures & Algorithms/Uncategorized/**"
 
 permissions:
   contents: write
@@ -11,6 +13,7 @@ permissions:
 jobs:
   organize:
     if: github.actor != 'github-actions[bot]'
+
     runs-on: ubuntu-latest
 
     steps:
@@ -19,24 +22,24 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Run Script
+      - name: Run Organizer
         run: python organize_problems.py
 
       - name: Commit Changes
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add .
 
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: organize problems [skip ci]"
-            git push
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
           else
-            echo "Nothing changed"
+            git commit -m "chore: organize submissions [skip ci]"
+            git push
           fi
