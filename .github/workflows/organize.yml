@@ -10,7 +10,9 @@ permissions:
 
 jobs:
   organize:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -20,20 +22,21 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: "3.11"
 
-      - name: Run Organization Script
-        # Updated this line to point to where the script actually lives
-        run: python "Data Structures & Algorithms/Uncategorized/organize_problems.py"
+      - name: Run Script
+        run: python organize_problems.py
 
-      - name: Commit and Push Changes
+      - name: Commit Changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add .
+
           if ! git diff --cached --quiet; then
-            git commit -m "chore: organize problems into topic-wise folders"
-            git push origin main
+            git commit -m "chore: organize problems [skip ci]"
+            git push
           else
-            echo "No changes to commit"
+            echo "Nothing changed"
           fi
