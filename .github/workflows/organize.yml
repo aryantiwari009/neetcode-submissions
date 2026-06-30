@@ -3,7 +3,7 @@ name: Organize Submissions Topicwise
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   organize:
