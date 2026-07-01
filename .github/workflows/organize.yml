@@ -1,14 +1,24 @@
 name: Organize NeetCode Submissions
 
+# NeetCode's GitHub Sync commits new submissions directly into the course
+# folder (e.g. "Data Structures & Algorithms/<slug>/submission-N.ext"),
+# NOT into a staging "Uncategorized" folder. Because we can't predict every
+# possible slug folder name that might be pushed, we trigger on every push
+# to main and let organize_problems.py decide (in a fraction of a second)
+# whether there's anything to organize. Infinite loops are prevented by the
+# "[skip ci]" tag in the bot's own commit message (recognized natively by
+# GitHub Actions) and by the actor check below as a second safeguard.
 on:
   push:
     branches:
       - main
-    paths:
-      - "Data Structures & Algorithms/Uncategorized/**"
 
 permissions:
   contents: write
+
+concurrency:
+  group: organize-neetcode-submissions
+  cancel-in-progress: false
 
 jobs:
   organize:
@@ -35,11 +45,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add .
+          git add -A
 
           if git diff --cached --quiet; then
             echo "Nothing to commit."
           else
             git commit -m "chore: organize submissions [skip ci]"
+            git pull --rebase origin main
             git push
           fi
